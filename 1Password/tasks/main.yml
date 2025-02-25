@@ -1,0 +1,6 @@
+---
+- name: Deploy connect sync server
+  ansible.builtin.import_tasks: connect.yml
+
+- name: Fetch provider keys
+  ansible.builtin.import_tasks: fetch.yml

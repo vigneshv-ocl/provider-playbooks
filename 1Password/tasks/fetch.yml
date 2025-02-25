@@ -1,0 +1,46 @@
+---
+- name: Display variables
+  ansible.builtin.debug:
+    msg: "provider: {{ provider_name }}, vault_name: {{ vault_name }}"
+
+- name: Get the vault ID for Providerss
+  ansible.builtin.shell: op vault list --format=json | jq -r '.[] | select(.name=="{{ vault_name}}") | .id'
+  register: vault_id_result
+
+- name: Store the vault ID in a variable
+  ansible.builtin.set_fact:
+    vault_uuid: "{{ vault_id_result.stdout }}"
+
+- name: Debug - Show the vault ID
+  ansible.builtin.debug:
+    var: vault_uuid    
+
+- name: Find a field labeled "username" in an item 
+  onepassword.connect.field_info:
+    token: "{{ create_token.stdout }}"
+    item: "{{ provider_name }}"
+    field: "{{ item }}"
+    vault: "{{ vault_uuid }}"
+  register: op_field_results
+  with_items:
+    - "b64-key"
+    - "b64-keysecret"
+
+- name: Set variables from field values
+  ansible.builtin.set_fact:
+    b64_key: "{{ op_field_results.results | selectattr('item', 'equalto', 'b64-key') | map(attribute='field.value') | first }}"
+    b64_keysecret: "{{ op_field_results.results | selectattr('item', 'equalto', 'b64-keysecret') | map(attribute='field.value') | first }}"
+
+- name: Debug - Show the extracted values
+  ansible.builtin.debug:
+    msg: "b64_key: {{ b64_key }}, b64_keysecret: {{ b64_keysecret }}"
+
+- name: Check and display success message
+  ansible.builtin.debug:
+    msg: "Item retrieved successfully"
+  when: b64_key | default('') != '' and b64_keysecret | default('') != ''
+
+- name: Display failure message
+  ansible.builtin.fail:
+    msg: "Item cannot be retrieved"
+  when: b64_key | default('') == '' or b64_keysecret | default('') == ''
