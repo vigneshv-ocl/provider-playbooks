@@ -1,9 +1,38 @@
+This guide provides details on how to use 1Password Ansible role to retrieve the b64-key and b64-keysecret from the 1Password vault.
+
+### Prerequisites
+- 1password-cli
+- Docker
+- Docker compose
+
+### Install the requirements
+We need to install the Docker collection. We use Docker Compose to spin up the 1Password Connect server locally. This facilitates fetching keys from the 1Password vault.
+
+```
 ansible-galaxy install -r requirements.yml
+```
 
-
-### Sample Playbook Run
+### Running the playbook
+```
 ansible-playbook playbooks.yaml -v
+```
 
+### Configuration Variables
+| Variable                 | Description                                        | Required | Default               |
+|--------------------------|----------------------------------------------------|------- --|-----------------------|
+| `vault_name`             | Name of the vault inside 1Password                 | Yes      | None                  |
+| `provider_name`          | Name of the provider                               | Yes      | None                  |
+| `connect_host`           | URL of the host                                    | No       | http://localhost:8080 |
+| `provider_b64_key_field` | b64-key that will be fetched from the vault        | No       | b64-key               |
+| `provider_b64_sec_field` | b64-keysecret that will be fetched from the vault  | No       | b64-keysecret         |
+| `opconnect_account_name` | Account name for the 1Password                     | Yes      | my.1password.com      |
+| `opconnect_server_name`  | Server name for the 1Password connect              | No       | op_connect_server     |
+| `opconnect_token_name`   | Token name for the server in 1Password connect     | No       | op_connect_token      |
+
+
+### Examples
+
+#### Deployment
 ```
 ansible-playbook playbooks.yaml -v
 No config file found; using defaults
@@ -72,22 +101,12 @@ changed: [localhost] => {"changed": true, "cmd": "op vault list --format=json | 
 TASK [1Password : Store the vault ID in a variable] ***********************************************************************************************************
 ok: [localhost] => {"ansible_facts": {"vault_uuid": "<REDACTED>"}, "changed": false}
 
-TASK [1Password : Debug - Show the vault ID] ******************************************************************************************************************
-ok: [localhost] => {
-    "vault_uuid": "<REDACTED>"
-}
-
 TASK [1Password : Find a field labeled "username" in an item] *************************************************************************************************
 ok: [localhost] => (item=b64-key) => {"ansible_loop_var": "item", "changed": false, "field": {"id": "password", "section": null, "value": "<REDACTED>"}, "item": "b64-key"}
 ok: [localhost] => (item=b64-keysecret) => {"ansible_loop_var": "item", "changed": false, "field": {"id": "yrvac22x2l4dmhanzeljr24uvm", "section": null, "value": "<REDACTED>"}, "item": "b64-keysecret"}
 
 TASK [1Password : Set variables from field values] ************************************************************************************************************
 ok: [localhost] => {"ansible_facts": {"b64_key": "<REDACTED>", "b64_keysecret": "<REDACTED>"}, "changed": false}
-
-TASK [1Password : Debug - Show the extracted values] **********************************************************************************************************
-ok: [localhost] => {
-    "msg": "b64_key: <REDACTED>, b64_keysecret: <REDACTED>"
-}
 
 TASK [1Password : Check and display success message] **********************************************************************************************************
 ok: [localhost] => {
