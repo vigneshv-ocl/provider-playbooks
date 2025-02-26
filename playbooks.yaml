@@ -1,10 +1,8 @@
 ---
-- name: Retrieve 1Password items
-  hosts: localhost
-  gather_facts: no
-  environment:
-    OP_CONNECT_HOST: "{{ connect_host }}/v1/vaults"
-  collections:
-    - onepassword.connect
+- name: GPU Playbook
+  hosts: "{{ host }}"
+  become: true
+  become_user: root
+  serial: "{{ serial_hosts | default(1) }}"
   roles:
-    - 1Password
+    - gpu
